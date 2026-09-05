@@ -134,8 +134,23 @@ export const sendChat = createServerFn({ method: "POST" })
 
         if (pref.complete) {
           const category = String(patch['category']);
+
+          // Pull real, live products for this category (cached into Supabase,
+          // falls back silently to whatever's cached if the live search fails).
+          const { fetchLiveProducts } = await import("./productSearch.server");
+          const liveProducts = await fetchLiveProducts(
+            db,
+            category,
+            (patch['preferences'] as string[]).join(" "),
+          );
+          // New live products won't be in `effective` yet (it was built from
+          // the catalog loaded before this search) — fill in the gaps.
+          for (const p of liveProducts) {
+            if (!(p.id in effective)) effective[p.id] = effectivePrice(p, offers);
+          }
+
           const matched = rankMatches(
-            products.filter((p) => p.category === category),
+            liveProducts,
             {
               budget_min: patch['budget_min'] as number | null,
               budget_max: patch['budget_max'] as number | null,
