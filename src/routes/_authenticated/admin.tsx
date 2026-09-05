@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +7,17 @@ import { Switch } from "@/components/ui/switch";
 import { useCatalog } from "@/hooks/useCatalog";
 import { effectivePrice, inr, offerFor } from "@/lib/deal";
 
+// Demo-scope access control: only these emails can reach the seller console.
+// (A real product would use a `role` column on a profiles table instead.)
+const ADMIN_EMAILS = ["your-team-email@example.com"];
+
 export const Route = createFileRoute("/_authenticated/admin")({
+  beforeLoad: async () => {
+    const { data } = await supabase.auth.getUser();
+    if (!ADMIN_EMAILS.includes(data.user?.email ?? "")) {
+      throw redirect({ to: "/chat" });
+    }
+  },
   head: () => ({
     meta: [
       { title: "Seller console — DealMate" },
