@@ -30,6 +30,7 @@ export type ProductRow = {
   price: number;
   tags: string[];
   stock_count: number;
+  image_url?: string | null; // real product photo, when sourced from live search
 };
 
 export type OfferRow = {
