@@ -40,8 +40,20 @@ function ChatSessionView() {
   const [orderTarget, setOrderTarget] = useState<{ product: ProductRow; unitPrice: number } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const [sessionError, setSessionError] = useState<string | null>(null);
+
   useEffect(() => {
-    void start({}).then(setSession);
+    let cancelled = false;
+    start({})
+      .then((s) => {
+        if (!cancelled) setSession(s);
+      })
+      .catch(() => {
+        if (!cancelled) setSessionError("We couldn't open your session. Please refresh or sign in again.");
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [start]);
 
   useEffect(() => {
