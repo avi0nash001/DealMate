@@ -94,8 +94,10 @@ function ChatSessionView() {
 
   if (!session) {
     return (
-      <div className="flex h-[70vh] items-center justify-center">
-        <span className="label-mono text-muted-foreground">opening your session…</span>
+      <div className="flex h-[70vh] items-center justify-center px-4 text-center">
+        <span className="label-mono text-muted-foreground">
+          {sessionError ?? "opening your session…"}
+        </span>
       </div>
     );
   }
