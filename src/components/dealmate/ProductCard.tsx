@@ -1,4 +1,31 @@
 import { effectivePrice, inr, offerFor, type Deal, type OfferRow, type ProductRow } from "@/lib/deal";
+import { effectivePrice, inr, offerFor, type Deal, type OfferRow, type ProductRow } from "@/lib/deal";
+
+// Matches a product's category to a representative icon. Add more entries
+// here as new categories are introduced — "📦" is the safe generic fallback.
+function categoryIcon(category: string): string {
+  const lower = category.toLowerCase();
+  const map: Record<string, string> = {
+    "running shoes": "👟",
+    shoes: "👟",
+    footwear: "👟",
+    earbuds: "🎧",
+    headphones: "🎧",
+    audio: "🎧",
+    watch: "⌚",
+    smartwatch: "⌚",
+    bag: "🎒",
+    backpack: "🎒",
+    clothing: "👕",
+    apparel: "👕",
+    electronics: "💻",
+    laptop: "💻",
+    phone: "📱",
+    kitchen: "🍳",
+    furniture: "🪑",
+  };
+  return map[lower] ?? "📦";
+}
 
 export function ProductCard({
   product,
