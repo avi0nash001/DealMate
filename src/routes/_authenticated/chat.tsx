@@ -72,6 +72,7 @@ function ChatSessionView() {
 
     try {
       const next = await send({ data: { sessionId: session.id, text } });
+      await reload(); // pick up any newly live-searched products immediately, don't wait on realtime
       setSession(next);
     } finally {
       setOptimistic([]);
