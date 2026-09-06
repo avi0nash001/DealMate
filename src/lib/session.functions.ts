@@ -220,7 +220,9 @@ export const sendChat = createServerFn({ method: "POST" })
         }
       }
     } catch (e) {
+      console.error("[sendChat] agent turn failed", session.stage, e);
       const status = (e as { status?: number }).status;
+
       const text =
         status === 402
           ? "I've hit my usage limit for now — the shop owner needs to top up AI credits before I can keep negotiating."
