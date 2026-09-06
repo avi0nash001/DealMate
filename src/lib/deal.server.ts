@@ -88,10 +88,10 @@ Known so far: ${JSON.stringify(known)}.
 Return ONLY JSON: {"reply":string,"complete":boolean,"category":string|null,"budget_min":number|null,"budget_max":number|null,"preferences":string[]}
 Set complete=true only once category, both budget bounds and at least one preference are known. When complete, reply should say you're handing over to the Deal-Hunter.`;
 
-const out = await jsonCall<PreferenceResult>([
-  { role: "system", content: system },
-  { role: "user", content: transcript(history) || "(shopper just opened the chat)" },
-]);
+  const out = await jsonCall<PreferenceResult>(system, [
+    { role: "user", content: transcript(history) || "(shopper just opened the chat)" },
+  ]);
+
 
 const category = String(out.category ?? "").trim().toLowerCase() || null;
 
