@@ -33,9 +33,12 @@ function AuthPage() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    void supabase.auth.getUser().then(({ data }) => {
-      if (data.user) navigate({ to: "/chat", replace: true });
-    });
+    void supabase.auth
+      .getUser()
+      .then(({ data }) => {
+        if (data.user) navigate({ to: "/chat", replace: true });
+      })
+      .catch(() => setError("We couldn't check your sign-in. Please refresh and try again."));
   }, [navigate]);
 
   async function submit(e: React.FormEvent) {
