@@ -53,7 +53,7 @@ export async function fetchLiveProducts(
   db: Db,
   category: string,
   preferenceQuery: string,
-): Promise<ProductRow[]> {
+): Promise<ProductRow[]> {]
   const key = process.env["RAPIDAPI_KEY"];
 
   // No key configured -> skip live search entirely, use cache only.
