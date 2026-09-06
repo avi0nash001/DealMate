@@ -1,5 +1,4 @@
 import { effectivePrice, inr, offerFor, type Deal, type OfferRow, type ProductRow } from "@/lib/deal";
-import { effectivePrice, inr, offerFor, type Deal, type OfferRow, type ProductRow } from "@/lib/deal";
 
 // Matches a product's category to a representative icon. Add more entries
 // here as new categories are introduced — "📦" is the safe generic fallback.
