@@ -12,9 +12,9 @@ export const DEAL_RULES = {
 
 const MODEL = "google/gemini-3.6-flash";
 
-type LlmMessage = { role: "system" | "user" | "assistant"; content: string };
+type LlmMessage = { role: "user" | "assistant"; content: string };
 
-async function callGateway(messages: LlmMessage[]): Promise<string> {
+async function callGateway(system: string, messages: LlmMessage[]): Promise<string> {
   const key = process.env["LOVABLE_API_KEY"];
   if (!key) throw new Error("AI is not configured");
 
@@ -22,8 +22,9 @@ async function callGateway(messages: LlmMessage[]): Promise<string> {
   try {
     const result = await generateText({
       model: gateway(MODEL),
+      system,
       messages,
-      maxRetries: 0,
+      maxRetries: 1,
     });
     return result.text;
   } catch (error) {
@@ -38,16 +39,17 @@ async function callGateway(messages: LlmMessage[]): Promise<string> {
 }
 
 /** Calls the model and parses strict JSON, retrying once on malformed output. */
-async function jsonCall<T>(messages: LlmMessage[]): Promise<T> {
+async function jsonCall<T>(system: string, messages: LlmMessage[]): Promise<T> {
+  let convo = messages;
   for (let attempt = 0; attempt < 2; attempt++) {
-    const raw = await callGateway(messages);
+    const raw = await callGateway(system, convo);
+    const match = raw.match(/\{[\s\S]*\}/);
     try {
-      const cleaned = raw.trim().replace(/^```(?:json)?/i, "").replace(/```$/, "");
-      return JSON.parse(cleaned) as T;
+      return JSON.parse((match ? match[0] : raw).trim()) as T;
     } catch {
       if (attempt === 1) throw new Error("MALFORMED_JSON");
-      messages = [
-        ...messages,
+      convo = [
+        ...convo,
         { role: "assistant", content: raw.slice(0, 400) },
         { role: "user", content: "That was not valid JSON. Reply with the JSON object only." },
       ];
@@ -55,6 +57,7 @@ async function jsonCall<T>(messages: LlmMessage[]): Promise<T> {
   }
   throw new Error("MALFORMED_JSON");
 }
+
 
 function transcript(messages: ChatMessage[]): string {
   return messages
