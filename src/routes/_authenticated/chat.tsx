@@ -44,6 +44,7 @@ function ChatSessionView() {
 
   useEffect(() => {
     let cancelled = false;
+    setSessionError(null);
     start({})
       .then((s) => {
         if (!cancelled) setSession(s);
@@ -86,6 +87,9 @@ function ChatSessionView() {
       const next = await send({ data: { sessionId: session.id, text } });
       await reload(); // pick up any newly live-searched products immediately, don't wait on realtime
       setSession(next);
+      setSessionError(null);
+    } catch (error) {
+      setSessionError(error instanceof Error ? error.message : "Your message couldn't be sent. Please try again.");
     } finally {
       setOptimistic([]);
       setPending(null);
@@ -117,7 +121,12 @@ function ChatSessionView() {
               className="label-mono text-muted-foreground hover:text-foreground"
               onClick={async () => {
                 setOrderTarget(null);
-                setSession(await reset({}));
+                try {
+                  setSession(await reset({}));
+                  setSessionError(null);
+                } catch (error) {
+                  setSessionError(error instanceof Error ? error.message : "A new session couldn't be opened.");
+                }
               }}
             >
               new session
@@ -127,6 +136,7 @@ function ChatSessionView() {
           <ChatLog messages={messages} pendingAgent={pending} />
 
           <form onSubmit={submit} className="flex gap-2 border-t border-border p-3 sm:p-4">
+            {sessionError ? <p role="alert" className="sr-only">{sessionError}</p> : null}
             <input
               ref={inputRef}
               value={input}

@@ -1,6 +1,8 @@
 // SERVER ONLY. Seller deal rules and LLM access never reach the client bundle.
+import { generateText } from "ai";
 import type { ChatMessage, Deal, ProductRow } from "./deal";
 import { round2 } from "./deal";
+import { createLovableAiGatewayProvider } from "./ai-gateway.server";
 
 export const DEAL_RULES = {
   max_single_discount_pct: 15,
@@ -8,8 +10,7 @@ export const DEAL_RULES = {
   bundle_min_items: 2,
 } as const;
 
-const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
-const MODEL = "google/gemini-3-flash-preview";
+const MODEL = "google/gemini-3.6-flash";
 
 type LlmMessage = { role: "system" | "user" | "assistant"; content: string };
 
@@ -17,30 +18,23 @@ async function callGateway(messages: LlmMessage[]): Promise<string> {
   const key = process.env["LOVABLE_API_KEY"];
   if (!key) throw new Error("AI is not configured");
 
-  const res = await fetch(GATEWAY_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${key}`,
-    },
-    body: JSON.stringify({
-      model: MODEL,
+  const gateway = createLovableAiGatewayProvider(key);
+  try {
+    const result = await generateText({
+      model: gateway(MODEL),
       messages,
-      response_format: { type: "json_object" },
-    }),
-  });
-
-  if (!res.ok) {
-    const body = await res.text();
-    const err = new Error(body || res.statusText) as Error & { status?: number };
-    err.status = res.status;
-    throw err;
+      maxRetries: 0,
+    });
+    return result.text;
+  } catch (error) {
+    const status = (error as { statusCode?: number }).statusCode;
+    if (status == null) throw error;
+    const gatewayError = new Error(error instanceof Error ? error.message : "AI request failed") as Error & {
+      status?: number;
+    };
+    gatewayError.status = status;
+    throw gatewayError;
   }
-
-  const json = (await res.json()) as {
-    choices?: { message?: { content?: string } }[];
-  };
-  return json.choices?.[0]?.message?.content ?? "";
 }
 
 /** Calls the model and parses strict JSON, retrying once on malformed output. */

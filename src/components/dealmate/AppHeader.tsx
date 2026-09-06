@@ -12,9 +12,14 @@ export function AppHeader() {
 
   useEffect(() => {
     let active = true;
-    void supabase.auth.getUser().then(({ data }) => {
-      if (active) setEmail(data.user?.email ?? null);
-    });
+    void supabase.auth
+      .getUser()
+      .then(({ data }) => {
+        if (active) setEmail(data.user?.email ?? null);
+      })
+      .catch(() => {
+        if (active) setEmail(null);
+      });
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
       setEmail(session?.user?.email ?? null);
     });
