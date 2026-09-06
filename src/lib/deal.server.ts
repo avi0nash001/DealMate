@@ -212,6 +212,6 @@ export function rankMatches(
     })
     .filter((r) => r.inBudget)
     .sort((a, b) => b.score - a.score)
-    .slice(0, 3)
+    .slice(0, 12)
     .map((r) => r.product);
 }
