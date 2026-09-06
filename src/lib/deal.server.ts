@@ -136,10 +136,10 @@ Replies under 45 words, confident, no emojis.
 Return ONLY JSON: {"reply":string,"intent":"offer"|"accept"|"hold"|"close","kind":"single"|"bundle","product_ids":string[],"discount_pct":number}
 Use intent "accept" only when the shopper has agreed to the deal on the table.`;
 
-  const out = await jsonCall<NegotiationRaw>([
-    { role: "system", content: system },
+  const out = await jsonCall<NegotiationRaw>(system, [
     { role: "user", content: transcript(args.history) || "(open the negotiation)" },
   ]);
+
 
   return {
     reply: String(out.reply ?? "").slice(0, 500),
