@@ -32,11 +32,19 @@ export function ProductCard({
     >
       <div className="relative aspect-[16/10] overflow-hidden border-b border-border bg-surface-elevated">
         <img
-          src={`https://source.unsplash.com/640x400/?${encodeURIComponent(product.category)},${encodeURIComponent(product.tags[0] ?? "product")}&sig=${product.id.slice(0, 8)}`}
+          src={
+            product.image_url ??
+            `https://source.unsplash.com/640x400/?${encodeURIComponent(product.category)},${encodeURIComponent(product.tags[0] ?? "product")}&sig=${product.id.slice(0, 8)}`
+          }
           alt={product.name}
           loading="lazy"
           className="h-full w-full object-cover opacity-90 transition-opacity group-hover:opacity-100"
         />
+        {product.image_url ? (
+          <span className="label-mono absolute bottom-0 left-0 bg-background/85 px-2 py-0.5 text-sage">
+            live listing
+          </span>
+        ) : null}
         <span className="label-mono absolute left-0 top-0 bg-background/85 px-2 py-1 text-gold">#{rank + 1}</span>
         {offer ? (
           <span className="label-mono absolute right-0 top-0 bg-coral px-2 py-1 text-coral-foreground">
