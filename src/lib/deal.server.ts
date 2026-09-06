@@ -8,37 +8,25 @@ export const DEAL_RULES = {
   bundle_min_items: 2,
 } as const;
 
-const GEMINI_URL =
-  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
+const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
+const MODEL = "google/gemini-3-flash-preview";
 
 type LlmMessage = { role: "system" | "user" | "assistant"; content: string };
 
 async function callGateway(messages: LlmMessage[]): Promise<string> {
-  const key = process.env["GEMINI_API_KEY"];
+  const key = process.env["LOVABLE_API_KEY"];
   if (!key) throw new Error("AI is not configured");
 
-  const systemText = messages
-    .filter((m) => m.role === "system")
-    .map((m) => m.content)
-    .join("\n");
-
-  const contents = messages
-    .filter((m) => m.role !== "system")
-    .map((m) => ({
-      role: m.role === "assistant" ? "model" : "user",
-      parts: [{ text: m.content }],
-    }));
-
-  const res = await fetch(GEMINI_URL, {
+  const res = await fetch(GATEWAY_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "x-goog-api-key": key,
+      Authorization: `Bearer ${key}`,
     },
     body: JSON.stringify({
-      contents,
-      ...(systemText ? { systemInstruction: { parts: [{ text: systemText }] } } : {}),
-      generationConfig: { responseMimeType: "application/json" },
+      model: MODEL,
+      messages,
+      response_format: { type: "json_object" },
     }),
   });
 
@@ -50,9 +38,9 @@ async function callGateway(messages: LlmMessage[]): Promise<string> {
   }
 
   const json = (await res.json()) as {
-    candidates?: { content?: { parts?: { text?: string }[] } }[];
+    choices?: { message?: { content?: string } }[];
   };
-  return json.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+  return json.choices?.[0]?.message?.content ?? "";
 }
 
 /** Calls the model and parses strict JSON, retrying once on malformed output. */
