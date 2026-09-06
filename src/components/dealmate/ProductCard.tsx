@@ -57,7 +57,8 @@ export function ProductCard({
       style={{ animationDelay: `${rank * 70}ms` }}
       className="rank-in group block w-full cursor-pointer border border-border bg-surface p-0 text-left transition-[transform,border-color,box-shadow] hover:-translate-y-0.5 hover:border-gold/70 hover:shadow-[var(--shadow-card)] disabled:cursor-not-allowed disabled:opacity-50"
     >
-      <div className="relative aspect-[16/10] overflow-hidden border-b border-border bg-surface-elevated">
+     <div className="relative aspect-[16/10] overflow-hidden border-b border-border bg-surface-elevated flex items-center justify-center text-5xl">
+        {categoryIcon(product.category)}
         <img
           src={
             product.image_url ??
