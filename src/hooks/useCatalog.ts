@@ -13,7 +13,7 @@ export function useCatalog() {
 
   const load = useCallback(async () => {
     const [{ data: p }, { data: o }] = await Promise.all([
-      supabase.from("products").select("id,name,category,price,tags,stock_count").order("price"),
+      supabase.from("products").select("id,name,category,price,tags,stock_count,image_url").order("price"),
       supabase.from("live_offers").select("id,product_id,discount_pct,expires_at,active"),
     ]);
     setProducts(((p ?? []) as unknown as ProductRow[]).map((r) => ({ ...r, price: Number(r.price) })));
