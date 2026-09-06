@@ -34,7 +34,7 @@ export function ProductCard({
         <img
           src={
             product.image_url ??
-            `https://source.unsplash.com/640x400/?${encodeURIComponent(product.category)},${encodeURIComponent(product.tags[0] ?? "product")}&sig=${product.id.slice(0, 8)}`
+            `https://picsum.photos/seed/${product.id.slice(0, 8)}/640/400`
           }
           alt={product.name}
           loading="lazy"
