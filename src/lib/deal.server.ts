@@ -83,19 +83,18 @@ export async function runPreferenceAgent(
 ): Promise<PreferenceResult> {
   const system = `You are DealMate's Preference Agent for an Indian retail catalogue.
 Ask AT MOST 3 short questions, ONE at a time, in this order: (1) product category, (2) budget range in INR, (3) one or two must-have preferences.
-Allowed categories, verbatim: ${categories.join(", ")}. Never invent categories.
+The shopper can ask for ANY product category — don't restrict them to a fixed list.
 Keep replies under 32 words, warm and direct. Never mention discounts or negotiation.
 Known so far: ${JSON.stringify(known)}.
 Return ONLY JSON: {"reply":string,"complete":boolean,"category":string|null,"budget_min":number|null,"budget_max":number|null,"preferences":string[]}
 Set complete=true only once category, both budget bounds and at least one preference are known. When complete, reply should say you're handing over to the Deal-Hunter.`;
 
-  const out = await jsonCall<PreferenceResult>([
-    { role: "system", content: system },
-    { role: "user", content: transcript(history) || "(shopper just opened the chat)" },
-  ]);
+const out = await jsonCall<PreferenceResult>([
+  { role: "system", content: system },
+  { role: "user", content: transcript(history) || "(shopper just opened the chat)" },
+]);
 
-  const category =
-    categories.find((c) => c.toLowerCase() === String(out.category ?? "").toLowerCase()) ?? null;
+const category = String(out.category ?? "").trim().toLowerCase() || null;
 
   return {
     reply: String(out.reply ?? "").slice(0, 500),
