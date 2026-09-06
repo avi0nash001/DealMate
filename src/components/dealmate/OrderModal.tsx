@@ -29,6 +29,10 @@ export function OrderModal({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [placed, setPlaced] = useState<Placed | null>(null);
+  const [step, setStep] = useState<"form" | "payment" | "processing">("form");
+  const [cardNumber, setCardNumber] = useState("");
+  const [expiry, setExpiry] = useState("");
+  const [cvv, setCvv] = useState("");
 
   const reset = () => {
     setQuantity(1);
@@ -36,11 +40,18 @@ export function OrderModal({
     setError(null);
     setPlaced(null);
     setBusy(false);
+    setStep("form");
+    setCardNumber("");
+    setExpiry("");
+    setCvv("");
   };
 
   async function submit() {
     setBusy(true);
+    setStep("processing");
     setError(null);
+    // Purely cosmetic delay so the "payment" feels real — no real charge happens here.
+    await new Promise((r) => setTimeout(r, 1400));
     try {
       const order = await place({
         data: { productId: product!.id, sessionId, quantity, deliveryAddress: address.trim() },
@@ -49,10 +60,18 @@ export function OrderModal({
       onPlaced();
     } catch (e) {
       setError(e instanceof Error ? e.message.replace(/^.*Error:\s*/, "") : "Could not place the order");
+      setStep("payment");
     } finally {
       setBusy(false);
     }
   }
+
+  function formatCardNumber(v: string) {
+    const digits = v.replace(/\D/g, "").slice(0, 16);
+    return digits.replace(/(.{4})/g, "$1 ").trim();
+  }
+
+  const cardValid = cardNumber.replace(/\D/g, "").length === 16 && expiry.length === 5 && cvv.length === 3;
 
   return (
     <Dialog
@@ -84,6 +103,81 @@ export function OrderModal({
               Done
             </Button>
           </div>
+        ) : step === "processing" ? (
+          <div className="space-y-4 py-6 text-center">
+            <div className="mx-auto h-10 w-10 animate-spin rounded-full border-2 border-gold border-t-transparent" />
+            <p className="label-mono text-muted-foreground">processing payment…</p>
+          </div>
+        ) : step === "payment" ? (
+          <>
+            <DialogHeader>
+              <DialogTitle className="font-display">Payment</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between border border-border bg-surface p-3">
+                <span className="label-mono text-muted-foreground">amount due</span>
+                <span className="price-mono text-lg font-semibold text-gold">{inr(unitPrice * quantity)}</span>
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="card">Card number</Label>
+                <Input
+                  id="card"
+                  inputMode="numeric"
+                  placeholder="4242 4242 4242 4242"
+                  value={cardNumber}
+                  onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
+                  className="bg-surface price-mono"
+                  maxLength={19}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="grid gap-2">
+                  <Label htmlFor="expiry">Expiry</Label>
+                  <Input
+                    id="expiry"
+                    placeholder="MM/YY"
+                    value={expiry}
+                    onChange={(e) => {
+                      const digits = e.target.value.replace(/\D/g, "").slice(0, 4);
+                      setExpiry(digits.length > 2 ? `${digits.slice(0, 2)}/${digits.slice(2)}` : digits);
+                    }}
+                    className="bg-surface price-mono"
+                    maxLength={5}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="cvv">CVV</Label>
+                  <Input
+                    id="cvv"
+                    inputMode="numeric"
+                    placeholder="123"
+                    value={cvv}
+                    onChange={(e) => setCvv(e.target.value.replace(/\D/g, "").slice(0, 3))}
+                    className="bg-surface price-mono"
+                    maxLength={3}
+                  />
+                </div>
+              </div>
+
+              {error ? <p className="text-sm text-destructive">{error}</p> : null}
+
+              <Button
+                className="w-full bg-gold text-gold-foreground hover:bg-gold/90"
+                disabled={!cardValid || busy}
+                onClick={submit}
+              >
+                Pay {inr(unitPrice * quantity)}
+              </Button>
+              <Button variant="ghost" className="w-full text-muted-foreground" onClick={() => setStep("form")}>
+                Back
+              </Button>
+              <p className="text-center text-xs text-muted-foreground">
+                Demo scope: no real charge is made — this confirms a real order record.
+              </p>
+            </div>
+          </>
         ) : (
           <>
             <DialogHeader>
@@ -132,13 +226,13 @@ export function OrderModal({
 
               <Button
                 className="w-full bg-gold text-gold-foreground hover:bg-gold/90"
-                disabled={busy || address.trim().length < 8}
-                onClick={submit}
+                disabled={address.trim().length < 8}
+                onClick={() => setStep("payment")}
               >
-                {busy ? "Placing order…" : "Place order"}
+                Continue to payment
               </Button>
               <p className="text-center text-xs text-muted-foreground">
-                Demo scope: a real order record, no payment is taken.
+                Demo scope: a real order record, no live payment processor is connected.
               </p>
             </div>
           </>
