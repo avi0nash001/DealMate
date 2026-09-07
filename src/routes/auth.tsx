@@ -46,28 +46,33 @@ function AuthPage() {
     setBusy(true);
     setError(null);
 
-    const result =
-      mode === "login"
-        ? await supabase.auth.signInWithPassword({ email, password })
-        : await supabase.auth.signUp({
-            email,
-            password,
-            options: { emailRedirectTo: window.location.origin + "/chat" },
-          });
+    try {
+      const result =
+        mode === "login"
+          ? await supabase.auth.signInWithPassword({ email: email.trim(), password })
+          : await supabase.auth.signUp({
+              email: email.trim(),
+              password,
+              options: { emailRedirectTo: window.location.origin + "/chat" },
+            });
 
-    if (result.error) {
-      setError(result.error.message);
+      if (result.error) {
+        setError(result.error.message);
+        return;
+      }
+
+      if (!result.data.session) {
+        setError("Check your inbox to confirm your email, then sign in.");
+        return;
+      }
+
+      await navigate({ to: "/chat", replace: true });
+    } catch (error) {
+      console.error("Sign-in request failed", error);
+      setError("We couldn't sign you in. Check your connection and try again.");
+    } finally {
       setBusy(false);
-      return;
     }
-
-    if (!result.data.session) {
-      setError("Check your inbox to confirm your email, then sign in.");
-      setBusy(false);
-      return;
-    }
-
-    navigate({ to: "/chat", replace: true });
   }
 
   return (
